@@ -9,14 +9,26 @@ class MoviesController < ApplicationController
   def index
     @all_ratings = Movie.all_ratings
     @ratings_to_show = []
-    if (params[:ratings] != nil)
-      @ratings_to_show = params[:ratings].keys
-      return @movies = Movie.with_ratings(@ratings_to_show)
+    @sort_by = ''
+    
+    if (params[:sort] != nil) 
+      @sort_by = params[:sort]  
     else
-      return @movies = Movie.all
+      @sort_by = nil
     end
     
+    if (@sort_by == 'title')
+      @Movie_Title_CSS = 'hilite'
+    elsif (@sort_by == 'release_date')
+      @Release_Date_CSS = 'hilite'
+    end
     
+    if (params[:ratings] != nil)
+      @ratings_to_show = params[:ratings].keys
+      @movies = Movie.with_ratings(@ratings_to_show).order(@sort_by)
+    else
+      @movies = Movie.all.order(@sort_by)
+    end
 #     @movies = Movie.all
   end
 
