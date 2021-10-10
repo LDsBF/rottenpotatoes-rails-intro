@@ -14,7 +14,7 @@ class MoviesController < ApplicationController
     end
     
     @all_ratings = Movie.all_ratings
-    @ratings_to_show = []
+    @ratings_to_show = @all_ratings
     @sort_by = ""
     redirect = false
     
