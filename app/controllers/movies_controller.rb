@@ -1,5 +1,6 @@
 class MoviesController < ApplicationController
-
+  $count = 0
+  
   def show
     id = params[:id] # retrieve movie ID from URI route
     @movie = Movie.find(id) # look up movie by unique ID
@@ -7,12 +8,22 @@ class MoviesController < ApplicationController
   end
 
   def index
+    if ($count == 0)
+      session.clear
+      $count += 1
+    end
+    
     @all_ratings = Movie.all_ratings
     @ratings_to_show = []
-    @sort_by = ''
+    @sort_by = ""
+    redirect = false
     
-    if (params[:sort] != nil) 
-      @sort_by = params[:sort]  
+    if (params[:sort] != nil) # first detect whether view passes new :sort params 
+      @sort_by = params[:sort]
+      session[:sort] = @sort_by
+    elsif (session[:sort] != nil) # if no new :sort, check saved :sort status
+      @sort_by = session[:sort]
+      redirect = true
     else
       @sort_by = nil
     end
@@ -23,12 +34,28 @@ class MoviesController < ApplicationController
       @Release_Date_CSS = 'hilite'
     end
     
-    if (params[:ratings] != nil)
+    if (params[:ratings] != nil) # similar to check :sort above 
       @ratings_to_show = params[:ratings].keys
-      @movies = Movie.with_ratings(@ratings_to_show).order(@sort_by)
-    else
-      @movies = Movie.all.order(@sort_by)
+      session[:ratings] = @ratings_to_show
+#       @movies = Movie.with_ratings(@ratings_to_show).order(@sort_by)
+    elsif (session[:ratings] != nil)
+      if (redirect) 
+        @ratings_to_show = session[:ratings]
+        redirect = true
+      else
+        @ratings_to_show = []
+        session[:ratings] = @ratings_to_show
+      end
+#     else
+#       @movies = Movie.all.order(@sort_by)
     end
+    
+    if (redirect)
+      redirect_to movies_path(sort: @sort_by, ratings: Hash[@ratings_to_show.collect{ |item| [item, 1]}])
+    else
+      return @movies = Movie.with_ratings(@ratings_to_show).order(@sort_by)    
+    end
+  
 #     @movies = Movie.all
   end
 
